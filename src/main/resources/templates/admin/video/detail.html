@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{admin/layout/layout :: layout(~{:: title}, ~{:: #css}, ~{:: .content-wrapper}, ~{:: #js})}">
+
+<head>
+    <title th:text="${video.fileName}">Thực hành làm ứng dụng Meal Finder API với Javascript (Phần 2)</title>
+
+    <th:block id="css">
+        <link rel="stylesheet" th:href="@{/admin-assets/admin-lte/plugins/select2/css/select2.min.css}"/>
+        <link rel="stylesheet" th:href="@{/admin-assets/assets/css/style.css}">
+    </th:block>
+</head>
+
+<body>
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-12">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="/admin/dashboard">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="/admin/video">Danh sách video</a>
+                        </li>
+                        <li class="breadcrumb-item active" th:text="${video.fileName}">
+                            Thực hành làm ứng dụng Meal Finder API
+                            với Javascript (Phần 2)
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row py-2">
+                <div class="col-6">
+                    <a href="/admin/video" type="button" class="btn btn-default">
+                        <i class="fas fa-chevron-left"></i> Quay lại
+                    </a>
+                    <button type="button" class="btn btn-info px-4" id="btn-update">
+                        Cập nhật
+                    </button>
+                    <button type="button" class="btn btn-danger px-4" id="btn-delete">
+                        Xóa
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="form-update-movie">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>File name</label>
+                                            <input type="text" class="form-control" id="title" name="title"
+                                                   th:value="${video.fileName}"/>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Mô tả ngắn</label>
+                                            <textarea id="description" class="form-control" rows="6"
+                                                      name="description" th:text="${video.description}"></textarea>
+                                        </div>
+
+
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <div class="image-preview-container mb-3">
+                                                <video width="100%" height="100%" controls>
+                                                    <source th:src="@{'/video_uploads/'+${video.videoUrl}}" type="video/mp4">
+                                                    Trình duyệt của bạn không hỗ trợ thẻ video.
+                                                </video>
+                                            </div>
+                                            <label for="videoUrl">Chọn File:</label>
+                                            <input type="file" class="form-control" id="videoUrl" required>
+                                            <span th:classappend="text-danger" ></span>
+                                            <input type="file" id="image" class="d-none">
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+      </div>
+    </section>
+
+</div>
+
+
+
+
+    <th:block id="js">
+        <script th:src="@{/admin-assets/admin-lte/plugins/select2/js/select2.full.min.js}"></script>
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function () {
+                const updateButton = document.getElementById('btn-update');
+                const deleteButton = document.getElementById('btn-delete');
+                const form = document.getElementById('form-update-movie');
+               // const videoId = /* get the video ID from somewhere, e.g., a data attribute or a hidden input field */;
+                var urlParts = window.location.pathname.split("/");
+                var videoId = urlParts[urlParts.length - 2];
+
+                updateButton.addEventListener('click', function () {
+                    const formData = new FormData(form);
+                    const fileInput = document.getElementById('videoUrl');
+                    const file = fileInput.files[0];
+
+                    if (file) {
+                        formData.append('videoUrl', file);
+                    }
+
+                    fetch(`/admin/video/${videoId}/update`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Video updated successfully');
+                                // Optionally redirect or refresh the page
+                                window.location.href="/admin/video"
+                            } else {
+                                alert('An error occurred while updating the video');
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
+
+                deleteButton.addEventListener('click', function () {
+                    if (confirm('Are you sure you want to delete this video?')) {
+                        fetch(`/admin/video/${videoId}/delete`, {
+                            method: 'DELETE'
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Video deleted successfully');
+                                    window.location.href = '/admin/video';
+                                } else {
+                                    alert('An error occurred while deleting the video');
+                                }
+                            })
+                            .catch(error => console.error('Error:', error));
+                    }
+                });
+            });
+
+
+        </script>
+    </th:block>
+
+</body>
+
+</html>

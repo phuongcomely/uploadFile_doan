@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết ảnh</title>
+    <link rel="shortcut icon" href="/web/image/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/web/image/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"
+          integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="/web/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        .image-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #image-viewer {
+            transition: transform 0.3s ease;
+            max-width: 100%;
+            display: block;
+            border-radius: 8px;
+            margin: 0 auto; /* Để căn giữa ảnh */
+        }
+
+        .image-controls button {
+            margin-right: 8px;
+        }
+
+        footer {
+            background-color: #f8f9fa;
+            padding: 20px 0;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+<header class="bg-dark header">
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="/web/image/logo.png" alt="logo" class="logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#main-menu" aria-controls="main-menu" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-between align-items-center" id="main-menu">
+                <div class="navbar-nav">
+                    <a class="nav-link text-white" href="/">Trang chủ</a>
+                    <a class="nav-link text-white" href="/">Ảnh</a>
+                    <a class="nav-link text-white" href="/video">Video</a>
+
+                </div>
+                <div>
+                    <div th:if="${session.currentUser == null}">
+                        <a class="text-white" href="/dang-nhap">Đăng nhập</a>
+                    </div>
+                    <div th:if="${session.currentUser != null}" class="d-flex align-items-center">
+                        <p th:text="${session.currentUser.name}" class="mb-0 me-2 text-white"></p>
+                        <a href="javascript:void(0)" class="text-white fst-italic" onclick="logout()">(Đăng xuất)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<section class="py-4">
+    <div class="container">
+        <div class="col-md-7">
+            <div class="col-4">
+                <h4 class="mb-3" th:text="${image.title}">Tên ảnh</h4>
+
+            </div>
+
+            <div class="p-3 bg-light rounded shadow-sm">
+                <div class="row">
+                    <div class="col-2">
+                        <strong>Danh mục:</strong>
+                    </div>
+                    <div class="col-10">
+                        <p th:text="${image.category}"></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <strong>Mô tả:</strong>
+                    </div>
+                    <div class="col-10">
+                        <p th:text="${image.description}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4 d-flex justify-content-center align-items-center">
+            <div class="col-md-7">
+
+                <div class="image-container justify-content-center align-items-center">
+                    <img id="image-viewer" class="rounded" th:src="@{'/image_uploads/'+${image.imageUrl}}" th:alt="${image.title}">
+                    <div class="image-controls" style="margin-top: 10px">
+                        <button class="btn btn-primary btn-sm" onclick="zoomIn()"><i class="fas fa-search-plus"></i> Phóng to</button>
+                        <button class="btn btn-primary btn-sm" onclick="zoomOut()"><i class="fas fa-search-minus"></i> Thu nhỏ</button>
+                        <button class="btn btn-primary btn-sm" onclick="rotate()"><i class="fas fa-undo-alt"></i> Xoay</button>
+                        <button class="btn btn-primary btn-sm" onclick="convertToGrayscaleAndDownload()"><i class="fas fa-download"></i> Tải xuống ảnh đen trắng</button>
+                        <button class="btn btn-primary btn-sm" onclick="downloadOriginalImage()"><i class="fas fa-download"></i> Tải xuống ảnh gốc</button>
+                        <button class="btn btn-primary btn-sm" onclick="startCrop()"><i class="fas fa-crop"></i> Cắt ảnh</button>
+                        <button class="btn btn-primary btn-sm" onclick="downloadCroppedImage()" style="display:none;" id="crop-button"><i class="fas fa-download"></i> Tải ảnh đã cắt</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+<section class="py-4">
+    <div class="container">
+        <div>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-3">Bình luận</h3>
+                <button class="btn btn-primary" id="btn-open-modal-review" th:if="${session.currentUser != null}">
+                    Viết đánh giá
+                </button>
+            </div>
+            <p th:if="${session.currentUser == null}">Vui lòng <a href="/dang-nhap" class="text-primary text-decoration-underline">đăng
+                nhập</a> để viết bình luận</p>
+            <div class="review-list">
+                <div class="rating-item d-flex align-items-center mb-3 pb-3" th:each="review : ${reviews}">
+                    <div class="rating-avatar">
+                        <img th:src="${review.user.avatar}" th:alt="${review.user.name}">
+                    </div>
+                    <div class="rating-info ms-3">
+                        <div class="d-flex align-items-center">
+                            <p class="rating-name mb-0">
+                                <strong th:text="${review.user.name}">Bùi Hiên</strong>
+                            </p>
+                            <p class="rating-time mb-0 ms-2" th:text="${#dates.format(review.updatedAt, 'dd/MM/yyyy')}">
+                                09/01/2024</p>
+                        </div>
+                        <div class="rating-star">
+                            <p class="mb-0 fw-bold">
+                                <span class="rating-icon"><i class="fa fa-star"></i></span>
+                                <span><th:block th:text="${review.rating}"></th:block>/10 <th:block
+                                        th:text="${review.ratingText}"></th:block></span>
+                            </p>
+                        </div>
+                        <p class="rating-content mt-1 mb-0 text-muted" th:text="${review.content}">Phim xem ổn. Điểm
+                            nhấn chính là sự hài hước và
+                            tiết tấu. Kết phim chưa thực sự hài lòng. 1 số nhân vật hoành tráng ở đầu và giữa phim, thì
+                            cuối phim mờ nhạt. Diễn biến phim hoặc chưa dành đủ thời gian, hoặc chưa nhấn mạnh đủ để dẫn
+                            đến các kết quả ở cuối phim.</p>
+
+                        <div class="rating-action mt-2" th:if="${session.currentUser != null && session.currentUser.id == review.user.id}">
+                            <a href="javascript:void(0)" class="text-primary text-decoration-underline me-2" th:onclick="|openModalUpdate(${review.id})|">Sửa</a>
+                            <a href="javascript:void(0)" class="text-danger text-decoration-underline"
+                               th:onclick="|deleteReview(${review.id})|">Xóa</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div th:if="${session.currentUser != null}" class="modal fade" id="modal-review" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">Viết đánh giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <h5 class="text-center" th:text="${image.title}"></h5>
+                    <div class="rating-container my-3 d-flex justify-content-center align-items-center">
+                        <span class="rating-item fs-5" data-rating="1"><i class="fa fa-star"></i></span>
+                        <span class="rating-item fs-5" data-rating="2"><i class="fa fa-star"></i></span>
+                        <span class="rating-item fs-5" data-rating="3"><i class="fa fa-star"></i></span>
+                        <span class="rating-item fs-5" data-rating="4"><i class="fa fa-star"></i></span>
+                        <span class="rating-item fs-5" data-rating="5"><i class="fa fa-star"></i></span>
+
+                    </div>
+                    <p id="rating-value" class="text-center fst-italic mt-2"></p>
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" id="rating-content" rows="5" placeholder="Viết đánh giá"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-center align-items-center">
+                    <button type="button" class="btn btn-primary px-5" id="btn-handle-review">Hoàn tất</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2024 Your Company. All rights reserved.</p>
+    </div>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"
+        integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="/web/js/common.js"></script>
+<!-- Cropper.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+<script>
+    // Function to zoom in the image
+    function zoomIn() {
+        var imageView = document.getElementById('image-viewer');
+        var currentWidth = imageView.clientWidth;
+        imageView.style.width = (currentWidth * 1.2) + 'px'; // Increase by 20%
+    }
+
+    // Function to zoom out the image
+    function zoomOut() {
+        var imageView = document.getElementById('image-viewer');
+        var currentWidth = imageView.clientWidth;
+        imageView.style.width = (currentWidth / 1.2) + 'px'; // Decrease by 20%
+    }
+
+    // Function to rotate the image
+    function rotate() {
+        var imageView = document.getElementById('image-viewer');
+        var currentRotation = (parseInt(imageView.getAttribute('data-rotation')) || 0) + 90;
+        imageView.style.transform = 'rotate(' + currentRotation + 'deg)';
+        imageView.setAttribute('data-rotation', currentRotation);
+    }
+
+    // Function to convert image to grayscale and download
+    function convertToGrayscaleAndDownload() {
+        var image = document.getElementById('image-viewer');
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        ctx.drawImage(image, 0, 0);
+
+        // Convert image to grayscale
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var data = imageData.data;
+        for (var i = 0; i < data.length; i += 4) {
+            var avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            data[i] = avg;     // Red
+            data[i + 1] = avg; // Green
+            data[i + 2] = avg; // Blue
+        }
+        ctx.putImageData(imageData, 0, 0);
+
+        // Create a temporary link and trigger download
+        var grayscaleImage = canvas.toDataURL('image/png'); // Convert canvas to PNG format
+        var link = document.createElement('a');
+        link.href = grayscaleImage;
+        link.download = 'grayscale_image.png'; // Filename when downloaded
+        link.click();
+    }
+    function downloadOriginalImage() {
+        var image = document.getElementById('image-viewer');
+        var link = document.createElement('a');
+        link.href = image.src;
+        link.download = 'original_image.png'; // Filename when downloaded
+        link.click();
+    }
+    function startCrop() {
+        var image = document.getElementById('image-viewer');
+        cropper = new Cropper(image, {
+            aspectRatio: 1, // Adjust the aspect ratio as needed
+            viewMode: 1
+        });
+        document.getElementById('crop-button').style.display = 'inline-block';
+    }
+
+    function downloadCroppedImage() {
+        if (cropper) {
+            var canvas = cropper.getCroppedCanvas();
+            var link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = 'cropped_image.png';
+            link.click();
+            cropper.destroy();
+            document.getElementById('crop-button').style.display = 'none';
+        }
+    }
+
+    // Initialize the original dimensions on page load
+    window.onload = function() {
+        var image = document.getElementById('image-viewer');
+        originalWidth = image.clientWidth;
+        originalHeight = image.clientHeight;
+    };
+</script>
+<script th:inline="javascript"> // lưu dữ liệu từ review bằng thymleaf trả về bằng gias trị
+    const image = [[${image}]];
+    let reviews = [[${reviews}]]; //lấy giá trị
+    const currentUser = [[${session.currentUser}]];
+    console.log({image, reviews, currentUser});
+</script>
+<script th:if="${session.currentUser != null}" src="/web/js/image-detail-review.js"></script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{web/layout/layout :: layout(~{:: title}, ~{:: #css}, ~{:: #main-content}, ~{:: #js})}">
+<head>
+    <title>Trang chủ</title>
+
+    <th:block id="css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+        <style>
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .movie-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            .movie-item {
+                flex: 1 1 calc(25% - 20px);
+                box-sizing: border-box;
+            }
+            .movie-item video {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+            .movie-item button, .movie-item a {
+                margin-top: 10px;
+                display: inline-block;
+            }
+        </style>
+    </th:block>
+</head>
+<body class="home" style="background-color: #203059;">
+<th:block id="main-content">
+    <section>
+        <div class="container">
+            <h3 class="mb-3">VIDEO</h3>
+            <div class="movie-list">
+                <div class="movie-item" th:each="video : ${videoList}">
+                    <div class="movie-media">
+                        <video class="movie-poster rounded overflow-hidden" controls id="video-[[${video.id}]]">
+                            <source th:src="@{'/video_uploads/'+${video.videoUrl}}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <p class="mt-2" th:text="${video.fileName}">Cô Đi Mà Lấy Chồng Tôi</p>
+                        <button class="btn btn-primary btn-sm mt-2" th:onclick="'openFullscreen(\'video-' + ${video.id} + '\')'">
+                            <i class="fas fa-play"></i> Xem video
+                        </button>
+                        <a th:href="@{'/video_uploads/'+${video.videoUrl}}" download class="btn btn-secondary btn-sm mt-2">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</th:block>
+
+<th:block id="js">
+    <!-- Thêm jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script th:inline="javascript">
+        function openFullscreen(videoId) {
+            var elem = document.getElementById(videoId);
+            if (elem) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) { // Firefox
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) { // Chrome, Safari & Opera
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { // IE/Edge
+                    elem.msRequestFullscreen();
+                }
+            }
+        }
+
+        $(document).ready(function () {
+            $(".movie-list").css("display", "flex").css("flex-wrap", "wrap");
+            $(".movie-item").css("flex", "1 1 calc(25% - 20px)").css("box-sizing", "border-box");
+            $(".movie-item video").css("width", "100%").css("height", "auto").css("display", "block");
+            $(".movie-item button, .movie-item a").css("margin-top", "10px").css("display", "inline-block");
+        });
+    </script>
+</th:block>
+
+</body>
+</html>

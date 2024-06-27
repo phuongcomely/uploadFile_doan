@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{admin/layout/layout :: layout(~{:: title}, ~{:: #css}, ~{:: .content-wrapper}, ~{:: #js})}">
+
+<head>
+  <title>Thêm video</title>
+
+  <th:block id="css">
+    <link rel="stylesheet" th:href="@{/admin-assets/admin-lte/plugins/summernote/summernote-bs4.min.css}"/>
+    <link rel="stylesheet" th:href="@{/admin-assets/admin-lte/plugins/select2/css/select2.min.css}"/>
+    <link rel="stylesheet" th:href="@{/admin-assets/assets/css/style.css}">
+  </th:block>
+
+</head>
+<body>
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-12">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="/admin/dashboard">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item">
+              <a href="/admin">Video</a>
+            </li>
+            <li class="breadcrumb-item active">
+              Thêm video
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row py-2">
+        <div class="col-6">
+          <a href="/admin/video" type="button" class="btn btn-default">
+            <i class="fas fa-chevron-left"></i> Quay lại
+          </a>
+          <!--            <button type="submit" class="btn btn-info px-4" id="btn-create">-->
+          <!--              Lưu-->
+          <!-- </button> -->
+        </div>
+      </div>
+
+      <div class="container mt-5">
+
+        <form th:action="@{/admin/video/create}" method="post" enctype="multipart/form-data" th:object="${request}" id="form-create-video">
+          <div class="form-group">
+            <label for="fileName">File Name:</label>
+            <input type="text" class="form-control" id="fileName" th:field="*{fileName}" required>
+            <span th:if="${#fields.hasErrors('fileName')}" th:classappend="text-danger" th:errors="*{fileName}"></span>
+          </div>
+          <div class="form-group">
+            <label for="description">Description:</label>
+            <input type="text" class="form-control" id="description" th:field="*{description}" required>
+            <span th:if="${#fields.hasErrors('description')}" th:classappend="text-danger" th:errors="*{description}"></span>
+          </div>
+          <div class="form-group">
+            <label for="videoUrl">Video File:</label>
+            <input type="file" class="form-control" id="videoUrl" th:field="*{videoUrl}" required>
+            <span th:if="${#fields.hasErrors('videoUrl')}" th:classappend="text-danger" th:errors="*{videoUrl}"></span>
+          </div>
+          <button type="submit" class="btn btn-primary">Lưu</button>
+        </form>
+        <div th:if="${errorMessage}" class="alert alert-danger mt-3" role="alert">
+          <p th:text="${errorMessage}"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!--&lt;!&ndash;<script th:inline="javascript">&ndash;&gt;-->
+<!--&lt;!&ndash;  document.getElementById('btn-create').addEventListener('click', function() {&ndash;&gt;-->
+<!--&lt;!&ndash;    const fileName = document.getElementById('fileName').value;&ndash;&gt;-->
+<!--&lt;!&ndash;    const description = document.getElementById('description').value;&ndash;&gt;-->
+
+<!--&lt;!&ndash;    axios.post('/api/video', {&ndash;&gt;-->
+<!--&lt;!&ndash;      fileName: fileName,&ndash;&gt;-->
+<!--&lt;!&ndash;      description: description&ndash;&gt;-->
+<!--&lt;!&ndash;    })&ndash;&gt;-->
+<!--&lt;!&ndash;            .then(function (response) {&ndash;&gt;-->
+<!--&lt;!&ndash;              console.log(response.data);&ndash;&gt;-->
+<!--&lt;!&ndash;              alert('Video lưu thành công!');&ndash;&gt;-->
+<!--&lt;!&ndash;              // Optionally, redirect to another page or reset the form&ndash;&gt;-->
+<!--&lt;!&ndash;            })&ndash;&gt;-->
+<!--&lt;!&ndash;            .catch(function (error) {&ndash;&gt;-->
+<!--&lt;!&ndash;              console.error(error);&ndash;&gt;-->
+<!--&lt;!&ndash;              alert('Lỗi lưu video!');&ndash;&gt;-->
+<!--&lt;!&ndash;            });&ndash;&gt;-->
+<!--&lt;!&ndash;  });&ndash;&gt;-->
+<!--</script>-->
+</body>
+
+</html>
